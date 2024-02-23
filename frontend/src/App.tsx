@@ -1,40 +1,56 @@
-import { useState } from "react";
-import logo from "@/assets/images/logo-universal.png";
-import "@/style.css";
-import { Greet } from "#/wailsjs/go/main/App";
-import Button from "@mui/material/Button";
+import { useMemo } from "react";
+import "@/assets/css/main.css";
+import "@fontsource/jetbrains-mono";
+import { Alert, createTheme, CssBaseline, Snackbar, ThemeProvider } from "@mui/material";
+import { useSnackbarStore } from "@/store/snackbar";
+import { useThemeStore } from "@/store/theme";
+import AppLayout from "@/layouts/AppLayout";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import Index from "@/pages";
+import About from "@/pages/About";
 
 function App() {
-	const [resultText, setResultText] = useState(
-		"Please enter your name below 👇"
+	const snackBarStore =  useSnackbarStore();
+	const themeStore = useThemeStore();
+
+	const theme = useMemo(
+		() =>
+			createTheme({
+				palette: themeStore.palette(),
+				typography: {
+					fontFamily: "Jetbrains Mono",
+				}
+			}),
+		[themeStore.mode],
 	);
-	const [name, setName] = useState("");
-	const updateName = (e: any) => setName(e.target.value);
-	const updateResultText = (result: string) => setResultText(result);
-
-	function greet() {
-		Greet(name).then(updateResultText);
-	}
-
 	return (
-		<div id="App">
-			<img src={logo} id="logo" alt="logo" width={50} />
-			<div id="result" className="result">
-				{resultText}
-			</div>
-			<div id="input" className="input-box">
-				<input
-					id="name"
-					className="input"
-					onChange={updateName}
-					autoComplete="off"
-					name="input"
-					type="text"
-				/>
-				<Button onClick={greet}>
-					Greet
-				</Button>
-			</div>
+		<div id="App" className={"no-select"}>
+			<ThemeProvider theme={theme}>
+				<CssBaseline enableColorScheme />
+				<HashRouter basename={"/"}>
+					<AppLayout>
+						<Routes>
+							<Route path="/" element={<Index />} />
+							<Route path="/about" element={<About />} />
+							{/* more... */}
+						</Routes>
+					</AppLayout>
+				</HashRouter>
+				<Snackbar
+					anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+					open={snackBarStore.enabled}
+					onClose={snackBarStore.close}
+					autoHideDuration={2000}
+				>
+					<Alert
+						onClose={snackBarStore.close}
+						severity={snackBarStore.severity || "info"}
+						sx={{ width: '100%' }}
+					>
+						{ snackBarStore.message }
+					</Alert>
+				</Snackbar>
+			</ThemeProvider>
 		</div>
 	);
 }
