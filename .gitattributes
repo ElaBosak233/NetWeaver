@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.nsi linguist-vendored
+*.nsh linguist-vendored
+*.plist linguist-vendored
+*.js linguist-language=ts
