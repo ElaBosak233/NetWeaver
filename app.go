@@ -23,14 +23,17 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (a *App) StartProxy(url string, host string) string {
+func (a *App) StartProxy(url string, host string) map[string]string {
 	p := proxy.NewProxy(url, host)
 	addr, _ := p.Start()
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.proxies[addr] = p
 	log.Printf("Proxy started on %v\n", &p)
-	return addr
+	return map[string]string{
+		"addr": addr,
+		"id":   p.ID,
+	}
 }
 
 func (a *App) StopProxy(addr string) {

@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
@@ -12,19 +13,21 @@ import (
 )
 
 type Proxy struct {
-	TCPListener net.Listener
-	connMap     map[net.Conn]struct{}
+	ID          string
 	url         string
 	host        string
 	addr        string
+	tcpListener net.Listener
+	connMap     map[net.Conn]bool
 	mutex       sync.Mutex
 }
 
 func NewProxy(url string, host string) *Proxy {
 	return &Proxy{
+		ID:      uuid.NewString(),
 		url:     url,
 		host:    host,
-		connMap: make(map[net.Conn]struct{}),
+		connMap: make(map[net.Conn]bool),
 	}
 }
 
@@ -37,26 +40,25 @@ func (p *Proxy) Start() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error listening: %s", err.Error())
 	}
-	p.TCPListener = tcpListener
+	p.tcpListener = tcpListener
 
 	log.Printf("TCP server is listening on %s\n", tcpListener.Addr().String())
 
 	// Accept TCP connections and handle them
 	go func() {
 		for {
-			tcpConn, err := p.TCPListener.Accept()
-			if err != nil {
-				// 检查错误是否是因为监听器被关闭
+			tcpConn, _err := p.tcpListener.Accept()
+			if _err != nil {
 				var opErr *net.OpError
-				if errors.As(err, &opErr) && opErr.Op == "accept" {
-					log.Printf("TCPListener closed, stopping accept loop: %v", err)
+				if errors.As(_err, &opErr) && opErr.Op == "accept" {
+					log.Printf("tcpListener closed, stopping accept loop: %v", _err)
 					break
 				}
-				log.Printf("Error accepting: %v", err)
+				log.Printf("Error accepting: %v", _err)
 				continue
 			}
 			p.mutex.Lock()
-			p.connMap[tcpConn] = struct{}{}
+			p.connMap[tcpConn] = true
 			p.mutex.Unlock()
 			go p.handleTCPClient(tcpConn)
 		}
@@ -68,11 +70,11 @@ func (p *Proxy) Start() (string, error) {
 func (p *Proxy) Stop() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	if p.TCPListener != nil {
-		p.TCPListener.Close()
+	if p.tcpListener != nil {
+		_ = p.tcpListener.Close()
 	}
 	for conn := range p.connMap {
-		conn.Close()
+		_ = conn.Close()
 	}
 
 	return nil
@@ -81,7 +83,7 @@ func (p *Proxy) Stop() error {
 func (p *Proxy) handleTCPClient(tcpConn net.Conn) {
 	log.Printf("Accepted TCP connection from %s\n", tcpConn.RemoteAddr().String())
 	defer func() {
-		tcpConn.Close()
+		_ = tcpConn.Close()
 		p.mutex.Lock()
 		delete(p.connMap, tcpConn)
 		p.mutex.Unlock()
@@ -99,43 +101,49 @@ func (p *Proxy) handleTCPClient(tcpConn net.Conn) {
 		log.Printf("Dial error: %v", err)
 		return
 	}
-	defer wsConn.Close()
+	defer func(wsConn *websocket.Conn) {
+		_ = wsConn.Close()
+	}(wsConn)
 
 	log.Printf("Connected to WebSocket server %s\n", u.String())
 
-	// 从TCP连接复制数据到WebSocket
+	// TCP -> Websocket
 	go func() {
-		defer tcpConn.Close()
-		defer wsConn.Close()
+		defer func(tcpConn net.Conn) {
+			_ = tcpConn.Close()
+		}(tcpConn)
+		defer func(wsConn *websocket.Conn) {
+			_ = wsConn.Close()
+		}(wsConn)
 		for {
 			buf := make([]byte, 1024)
-			n, err := tcpConn.Read(buf)
-			if err != nil {
-				log.Printf("TCP Read error: %v", err)
+			n, _err := tcpConn.Read(buf)
+			if _err != nil {
+				log.Printf("TCP Read error: %v", _err)
 				break
 			}
-			err = wsConn.WriteMessage(websocket.BinaryMessage, buf[:n])
+			_err = wsConn.WriteMessage(websocket.BinaryMessage, buf[:n])
 			if err != nil {
-				log.Printf("WebSocket WriteMessage error: %v", err)
+				log.Printf("WebSocket WriteMessage error: %v", _err)
 				break
 			}
 		}
 	}()
 
-	// 从WebSocket连接复制数据到TCP
+	// Websocket -> TCP
 	for {
-		_, r, err := wsConn.NextReader()
-		if err != nil {
-			log.Printf("NextReader error: %v", err)
+		_, r, _err := wsConn.NextReader()
+		if _err != nil {
+			log.Printf("NextReader error: %v", _err)
 			break
 		}
-		buf, err := io.ReadAll(r)
-		if err != nil {
-			log.Printf("ReadAll error: %v", err)
+		buf, _err := io.ReadAll(r)
+		if _err != nil {
+			log.Printf("ReadAll error: %v", _err)
 			break
 		}
-		if _, err := tcpConn.Write(buf); err != nil {
-			log.Printf("TCP Write error: %v", err)
+		if _, _err = tcpConn.Write(buf); _err != nil {
+			log.Printf("TCP Write error: %v", _err)
 			break
 		}
 	}

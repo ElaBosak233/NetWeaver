@@ -1,4 +1,4 @@
-import { Box, Card, IconButton, Link, List, ListItem } from "@mui/material";
+import { Box, Card, IconButton, Link } from "@mui/material";
 import { useProxyStore } from "@/store/proxy";
 import CloseIcon from "@mui/icons-material/Close";
 import { StopProxy } from "#/wailsjs/go/main/App";
@@ -27,32 +27,34 @@ function History() {
 	}
 
 	return (
-		<Box display={"flex"} flexDirection={"column"} height={"25rem"}>
+		<Box display={"flex"} flexDirection={"column"} minHeight={"25rem"}>
 			<h1 style={{ display: "flex", alignItems: "center" }}>
 				<BoltIcon sx={{ mr: 1, fontSize: "2rem" }} color={"warning"} />
 				活跃连接
 			</h1>
 			{
-				Object.entries(proxyStore.active).map(([addr, url]) => {
+				Object.entries(proxyStore.active).reverse().map(([id, proxy]) => {
 					return (
-						<Card key={addr} style={{ display: "flex", marginTop: "0.5rem", justifyContent: "space-between", alignItems: "center" }} sx={{ p: 2 }}>
-							<div>
-								<span style={{ fontSize: "1rem" }}>{extractURL(url)}</span> → <span style={{ fontSize: "1rem" }}>{addr}</span>
+						<Card key={id} style={{
+							display: "flex", marginTop: "0.5rem", justifyContent: "space-between", alignItems: "center"
+						}} sx={{ p: 2, maxHeight: "4.5rem", minHeight: "4.5rem" }}>
+							<div style={{ marginLeft: "0.25rem" }}>
+								<span style={{ fontSize: "1rem" }}>{extractURL(proxy.url)}</span> → <span style={{ fontSize: "1rem" }}>{proxy.addr}</span>
 								<div>
 									<Link style={{ fontSize: "0.7rem" }} onClick={() => {
-										copyToClipboard(url);
-									}}>{ url }</Link>
+										copyToClipboard(proxy.url);
+									}}>{ proxy.url }</Link>
 								</div>
 							</div>
 							<div>
 								<IconButton color={"success"} onClick={() => {
-									copyToClipboard(addr);
+									copyToClipboard(proxy.addr);
 								}}>
 									<ContentCopyIcon />
 								</IconButton>
 								<IconButton color={"error"} onClick={() => {
-									StopProxy(addr).then(() => {
-										proxyStore.remove(addr);
+									StopProxy(id).then(() => {
+										proxyStore.remove(id);
 									});
 								}}>
 									<CloseIcon />
@@ -67,15 +69,17 @@ function History() {
 				失效连接
 			</h1>
 			{
-				Object.entries(proxyStore.inactive).map(([addr, url]) => {
+				Object.entries(proxyStore.inactive).map(([id, proxy]) => {
 					return (
-						<Card key={addr} style={{ display: "flex", marginTop: "0.5rem", justifyContent: "space-between", alignItems: "center" }} sx={{ p: 2 }}>
-							<div>
-								<span style={{ fontSize: "1rem" }}>{extractURL(url)}</span> → <span style={{ fontSize: "1rem" }}>{addr}</span>
+						<Card key={id} style={{
+							display: "flex", marginTop: "0.5rem", justifyContent: "space-between", alignItems: "center"
+						}} sx={{ p: 2, maxHeight: "4.5rem", minHeight: "4.5rem" }}>
+							<div style={{ marginLeft: "0.25rem" }}>
+								<span style={{ fontSize: "1rem" }}>{extractURL(proxy.url)}</span> → <span style={{ fontSize: "1rem" }}>{proxy.addr}</span>
 								<div>
 									<Link style={{ fontSize: "0.7rem" }} onClick={() => {
-										copyToClipboard(url);
-									}}>{ url }</Link>
+										copyToClipboard(proxy.url);
+									}}>{ proxy.url }</Link>
 								</div>
 							</div>
 						</Card>

@@ -27,9 +27,12 @@ function Index() {
 			snackbarStore.error("Websocket URL 格式错误");
 			return;
 		}
-		StartProxy(url, host).then((addr: string) => {
-			proxyStore.add(addr, url);
-			snackbarStore.success(`代理启动成功 ${addr}`);
+		StartProxy(url, host).then((res) => {
+			proxyStore.add(res?.id, {
+				addr: res?.addr,
+				url: url,
+			});
+			snackbarStore.success(`代理启动成功 ${res?.addr}`);
 			navigate("/history");
 		});
 	}
