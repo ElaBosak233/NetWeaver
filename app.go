@@ -28,7 +28,7 @@ func (a *App) StartProxy(url string, host string) map[string]string {
 	addr, _ := p.Start()
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.proxies[addr] = p
+	a.proxies[p.ID] = p
 	log.Printf("Proxy started on %v\n", &p)
 	return map[string]string{
 		"addr": addr,
@@ -36,11 +36,11 @@ func (a *App) StartProxy(url string, host string) map[string]string {
 	}
 }
 
-func (a *App) StopProxy(addr string) {
+func (a *App) StopProxy(id string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if p, ok := a.proxies[addr]; ok {
+	if p, ok := a.proxies[id]; ok {
 		_ = p.Stop()
-		delete(a.proxies, addr)
+		delete(a.proxies, id)
 	}
 }
