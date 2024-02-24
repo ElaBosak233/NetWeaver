@@ -12,13 +12,13 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - name: "NetWeaver Linux App"
+          - name: "NetWeaver"
             platform:  "linux/amd64"
             os: "ubuntu-latest"
-          - name: "NetWeaver Windows App"
+          - name: "NetWeaver"
             platform:  "windows/amd64"
             os: "windows-latest"
-          - name: "NetWeaver Mac App"
+          - name: "NetWeaver"
             platform:  "darwin/universal"
             os: "macos-latest"
 
