@@ -8,6 +8,7 @@ import AppLayout from "@/layouts/AppLayout";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import Index from "@/pages";
 import About from "@/pages/About";
+import History from "@/pages/History";
 
 function App() {
 	const snackBarStore =  useSnackbarStore();
@@ -32,6 +33,7 @@ function App() {
 						<Routes>
 							<Route path="/" element={<Index />} />
 							<Route path="/about" element={<About />} />
+							<Route path="/history" element={<History />} />
 							{/* more... */}
 						</Routes>
 					</AppLayout>

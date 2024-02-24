@@ -24,20 +24,10 @@ function Header() {
 						textAlign: "start",
 						fontSize: "1.1rem",
 						fontFamily: "Jetbrains Mono",
-						transform: "skew(-5deg, 0deg)",
 				}}
 				>
 					NetWeaver
 				</span>
-				<IconButton
-					size="small"
-					edge="end"
-					color="inherit"
-					style={{ marginRight: "0.5rem" }}
-					onClick={() => themeStore.toggle()}
-				>
-					<DarkModeIcon />
-				</IconButton>
 				<IconButton
 					size="small"
 					edge="end"

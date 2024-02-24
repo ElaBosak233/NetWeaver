@@ -1,34 +1,39 @@
 package proxy
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"io"
 	"log"
 	"net"
+	"net/url"
+	"sync"
 )
 
 type Proxy struct {
-	ctx         context.Context
-	cancel      context.CancelFunc
 	TCPListener net.Listener
-	WSConn      *websocket.Conn
+	connMap     map[net.Conn]struct{}
+	url         string
+	host        string
+	addr        string
+	mutex       sync.Mutex
 }
 
-func NewProxy() *Proxy {
-	return &Proxy{}
-}
-
-func (p *Proxy) Start(url string) (string, error) {
-	// Connect to the WebSocket server
-	dialer := websocket.Dialer{}
-	wsConn, _, err := dialer.Dial(url, nil)
-	if err != nil {
-		return "", fmt.Errorf("error connecting to WebSocket: %s", err.Error())
+func NewProxy(url string, host string) *Proxy {
+	return &Proxy{
+		url:     url,
+		host:    host,
+		connMap: make(map[net.Conn]struct{}),
 	}
-	p.WSConn = wsConn
+}
 
-	tcpListener, err := net.Listen("tcp", "localhost:0")
+func (p *Proxy) Start() (string, error) {
+	if p.host == "0.0.0.0" {
+		p.host = ""
+	}
+
+	tcpListener, err := net.Listen("tcp", fmt.Sprintf("%s:0", p.host))
 	if err != nil {
 		return "", fmt.Errorf("error listening: %s", err.Error())
 	}
@@ -36,84 +41,102 @@ func (p *Proxy) Start(url string) (string, error) {
 
 	log.Printf("TCP server is listening on %s\n", tcpListener.Addr().String())
 
-	// Create a context for cancellation
-	ctx, cancel := context.WithCancel(context.Background())
-	p.ctx = ctx
-	p.cancel = cancel
-
 	// Accept TCP connections and handle them
 	go func() {
 		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				tcpConn, err := tcpListener.Accept()
-				if err != nil {
-					log.Println("Error accepting:", err.Error())
-					continue
+			tcpConn, err := p.TCPListener.Accept()
+			if err != nil {
+				// 检查错误是否是因为监听器被关闭
+				var opErr *net.OpError
+				if errors.As(err, &opErr) && opErr.Op == "accept" {
+					log.Printf("TCPListener closed, stopping accept loop: %v", err)
+					break
 				}
-
-				go p.handleTCPClient(tcpConn)
+				log.Printf("Error accepting: %v", err)
+				continue
 			}
+			p.mutex.Lock()
+			p.connMap[tcpConn] = struct{}{}
+			p.mutex.Unlock()
+			go p.handleTCPClient(tcpConn)
 		}
 	}()
+	p.addr = tcpListener.Addr().String()
 	return tcpListener.Addr().String(), nil
 }
 
 func (p *Proxy) Stop() error {
-	// Cancel the context
-	p.cancel()
-
-	// Close the TCP listener
-	err := p.TCPListener.Close()
-	if err != nil {
-		return fmt.Errorf("Error closing TCP listener: %s", err.Error())
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	if p.TCPListener != nil {
+		p.TCPListener.Close()
 	}
-
-	// Close the WebSocket connection
-	err = p.WSConn.Close()
-	if err != nil {
-		return fmt.Errorf("Error closing WebSocket connection: %s", err.Error())
+	for conn := range p.connMap {
+		conn.Close()
 	}
 
 	return nil
 }
 
 func (p *Proxy) handleTCPClient(tcpConn net.Conn) {
-	defer tcpConn.Close()
-	log.Printf("Accepted connection from %s\n", tcpConn.RemoteAddr().String())
+	log.Printf("Accepted TCP connection from %s\n", tcpConn.RemoteAddr().String())
+	defer func() {
+		tcpConn.Close()
+		p.mutex.Lock()
+		delete(p.connMap, tcpConn)
+		p.mutex.Unlock()
+	}()
 
+	u, err := url.Parse(p.url)
+	if err != nil {
+		log.Printf("Failed to parse websocket URL: %v", err)
+		return
+	}
+
+	wsDialer := websocket.DefaultDialer
+	wsConn, _, err := wsDialer.Dial(u.String(), nil)
+	if err != nil {
+		log.Printf("Dial error: %v", err)
+		return
+	}
+	defer wsConn.Close()
+
+	log.Printf("Connected to WebSocket server %s\n", u.String())
+
+	// 从TCP连接复制数据到WebSocket
+	go func() {
+		defer tcpConn.Close()
+		defer wsConn.Close()
+		for {
+			buf := make([]byte, 1024)
+			n, err := tcpConn.Read(buf)
+			if err != nil {
+				log.Printf("TCP Read error: %v", err)
+				break
+			}
+			err = wsConn.WriteMessage(websocket.BinaryMessage, buf[:n])
+			if err != nil {
+				log.Printf("WebSocket WriteMessage error: %v", err)
+				break
+			}
+		}
+	}()
+
+	// 从WebSocket连接复制数据到TCP
 	for {
-		select {
-		case <-p.ctx.Done():
-			return
-		default:
-			buffer := make([]byte, 1024)
-			n, err := tcpConn.Read(buffer)
-			if err != nil {
-				log.Println("Error reading:", err.Error())
-				break
-			}
-			data := buffer[:n]
-
-			err = p.WSConn.WriteMessage(websocket.BinaryMessage, data)
-			if err != nil {
-				log.Println("Error sending to websocket:", err.Error())
-				break
-			}
-
-			_, response, err := p.WSConn.ReadMessage()
-			if err != nil {
-				log.Println("Error reading from websocket:", err.Error())
-				break
-			}
-
-			_, err = tcpConn.Write(response)
-			if err != nil {
-				log.Println("Error sending to TCP client:", err.Error())
-				break
-			}
+		_, r, err := wsConn.NextReader()
+		if err != nil {
+			log.Printf("NextReader error: %v", err)
+			break
+		}
+		buf, err := io.ReadAll(r)
+		if err != nil {
+			log.Printf("ReadAll error: %v", err)
+			break
+		}
+		if _, err := tcpConn.Write(buf); err != nil {
+			log.Printf("TCP Write error: %v", err)
+			break
 		}
 	}
 }

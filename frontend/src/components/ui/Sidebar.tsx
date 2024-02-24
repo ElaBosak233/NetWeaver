@@ -36,7 +36,9 @@ function Sidebar() {
 						</ListItemButton>
 					</ListItem>
 					<ListItem disablePadding>
-						<ListItemButton>
+						<ListItemButton onClick={() => {
+							navigate("/history");
+						}}>
 							<HistoryIcon sx={{ fontSize: "1.2rem" }} style={{ marginRight: "1rem" }} color="primary" />
 							<span style={{ fontSize: "0.8rem" }}>历史</span>
 						</ListItemButton>

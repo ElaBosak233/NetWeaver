@@ -17,7 +17,7 @@ function About() {
 					通常是在 CTF 解题过程中食用，用于快速建立 TCP over Websocket 隧道
 				</Typography>
 				<Typography variant={"body1"} style={{ fontStyle: "italic", opacity: "50%" }} sx={{ mt: "1rem" }}>
-					<div style={{display: "flex", alignContent: "center"}}>
+					<div style={{display: "flex", alignItems: "center"}}>
 						<VolunteerActivismIcon sx={{ mr: 1 }} />
 						Supported CTF Platforms
 					</div>
