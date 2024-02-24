@@ -48,12 +48,12 @@ function Sidebar() {
 			<Box flexGrow={1} />
 			<Box>
 				<List>
-					<ListItem disablePadding>
-						<ListItemButton>
-							<SettingsIcon sx={{ fontSize: "1.2rem" }} style={{ marginRight: "1rem" }} color="primary" />
-							<span style={{ fontSize: "0.8rem" }}>设置</span>
-						</ListItemButton>
-					</ListItem>
+					{/*<ListItem disablePadding>*/}
+					{/*	<ListItemButton>*/}
+					{/*		<SettingsIcon sx={{ fontSize: "1.2rem" }} style={{ marginRight: "1rem" }} color="primary" />*/}
+					{/*		<span style={{ fontSize: "0.8rem" }}>设置</span>*/}
+					{/*	</ListItemButton>*/}
+					{/*</ListItem>*/}
 					<ListItem disablePadding>
 						<ListItemButton onClick={() => {
 							navigate("/about");

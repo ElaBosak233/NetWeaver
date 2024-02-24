@@ -1,15 +1,11 @@
-import { AppBar, IconButton, Toolbar, useTheme } from "@mui/material";
+import { AppBar, IconButton, Toolbar } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CloseIcon from "@mui/icons-material/Close";
 import CableIcon from "@mui/icons-material/Cable";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { Quit, WindowMinimise, WindowSetDarkTheme, WindowSetLightTheme, LogInfo } from "#/wailsjs/runtime";
-import { useThemeStore } from "@/store/theme";
-import React, { useState } from "react";
+import { Quit, WindowMinimise } from "#/wailsjs/runtime";
+import React from "react";
 
 function Header() {
-	const themeStore = useThemeStore();
-
 	return (
 		<AppBar position={"fixed"} sx={{
 			zIndex: (theme) => theme.zIndex.drawer + 1,
@@ -32,7 +28,7 @@ function Header() {
 					size="small"
 					edge="end"
 					color="inherit"
-					style={{ marginRight: "0.5rem" }}
+					style={{ marginRight: "0.5rem", "--wails-draggable": "no-drag"} as React.CSSProperties }
 					onClick={() => WindowMinimise()}
 				>
 					<RemoveIcon />
@@ -41,6 +37,7 @@ function Header() {
 					size="small"
 					edge="end"
 					color="inherit"
+					style={{"--wails-draggable": "no-drag"} as React.CSSProperties}
 					onClick={() => Quit()}
 				>
 					<CloseIcon />
