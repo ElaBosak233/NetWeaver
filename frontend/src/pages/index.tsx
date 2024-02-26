@@ -1,5 +1,5 @@
 import Button from "@mui/material/Button";
-import React, { useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 import { StartProxy } from "#/wailsjs/go/main/App";
 import { useSnackbarStore } from "@/store/snackbar";
 import { useProxyStore } from "@/store/proxy";
@@ -37,26 +37,57 @@ function Index() {
 		});
 	}
 	return (
-		<Box display={"flex"} flexDirection={"column"} height={"25rem"} justifyContent={"center"}>
-			<div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-				<CableIcon color={"primary"} sx={{ fontSize: "5rem" }}/>
-				<div style={{ fontSize: "3rem" }}>
-					开始
-				</div>
+		<Box
+			display={"flex"}
+			flexDirection={"column"}
+			height={"25rem"}
+			justifyContent={"center"}
+		>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "center",
+					alignItems: "center",
+				}}
+			>
+				<CableIcon color={"primary"} sx={{ fontSize: "5rem" }} />
+				<div style={{ fontSize: "3rem" }}>开始</div>
 			</div>
-			<div style={{ display: "flex", justifyContent: "center", marginTop: "1.5rem" }}>
+			<div
+				style={{
+					display: "flex",
+					justifyContent: "center",
+					marginTop: "1.5rem",
+				}}
+			>
 				<Tooltip title={host} placement="top">
-					<IconButton sx={{ borderRadius: "5px" }} size={"large"} onClick={toggleHost}>
-						{ host === "127.0.0.1" ? <LockIcon /> : <PublicIcon />}
+					<IconButton
+						sx={{ borderRadius: "5px" }}
+						size={"large"}
+						onClick={toggleHost}
+					>
+						{host === "127.0.0.1" ? <LockIcon /> : <PublicIcon />}
 					</IconButton>
 				</Tooltip>
-				<TextField label={"[ws/wss]://"} variant="outlined" onChange={(e: any) => setUrl(e.target.value)} />
-				<Button startIcon={<LinkIcon />} onClick={proxy} variant={"contained"} size={"large"} disableElevation>
+				<TextField
+					label={"[ws/wss]://"}
+					variant="outlined"
+					onChange={(e: ChangeEvent<HTMLInputElement>) =>
+						setUrl(e.target.value)
+					}
+				/>
+				<Button
+					startIcon={<LinkIcon />}
+					onClick={proxy}
+					variant={"contained"}
+					size={"large"}
+					disableElevation
+				>
 					连接
 				</Button>
 			</div>
 		</Box>
-	)
+	);
 }
 
 export default Index;

@@ -1,7 +1,13 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import "@/assets/css/main.css";
 import "@fontsource/jetbrains-mono";
-import { Alert, createTheme, CssBaseline, Snackbar, ThemeProvider } from "@mui/material";
+import {
+	Alert,
+	createTheme,
+	CssBaseline,
+	Snackbar,
+	ThemeProvider,
+} from "@mui/material";
 import { useSnackbarStore } from "@/store/snackbar";
 import { useThemeStore } from "@/store/theme";
 import AppLayout from "@/layouts/AppLayout";
@@ -11,7 +17,7 @@ import About from "@/pages/About";
 import History from "@/pages/History";
 
 function App() {
-	const snackBarStore =  useSnackbarStore();
+	const snackBarStore = useSnackbarStore();
 	const themeStore = useThemeStore();
 
 	const theme = useMemo(
@@ -20,9 +26,9 @@ function App() {
 				palette: themeStore.palette(),
 				typography: {
 					fontFamily: "Jetbrains Mono",
-				}
+				},
 			}),
-		[themeStore.mode],
+		[themeStore.mode]
 	);
 	return (
 		<div id="App" className={"no-select"}>
@@ -47,9 +53,9 @@ function App() {
 					<Alert
 						onClose={snackBarStore.close}
 						severity={snackBarStore.severity || "info"}
-						sx={{ width: '100%' }}
+						sx={{ width: "100%" }}
 					>
-						{ snackBarStore.message }
+						{snackBarStore.message}
 					</Alert>
 				</Snackbar>
 			</ThemeProvider>

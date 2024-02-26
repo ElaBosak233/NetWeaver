@@ -36,5 +36,5 @@ export const useSnackbarStore = create<SnackbarState>((set) => ({
 			return;
 		}
 		set({ enabled: false });
-	}
+	},
 }));

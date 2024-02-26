@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { PaletteMode, PaletteOptions } from "@mui/material";
-import { blue, grey } from "@mui/material/colors";
+import { grey } from "@mui/material/colors";
 
 interface ThemeState {
 	mode: PaletteMode;
@@ -11,7 +11,7 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 	mode: "dark",
 	palette: () => ({
 		mode: get().mode,
-		...({
+		...{
 			primary: grey,
 			secondary: grey,
 			divider: grey[800],
@@ -23,6 +23,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
 				primary: "#fff",
 				secondary: "#ccc",
 			},
-		}),
+		},
 	}),
 }));

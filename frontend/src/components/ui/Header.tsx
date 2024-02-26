@@ -7,20 +7,27 @@ import React from "react";
 
 function Header() {
 	return (
-		<AppBar position={"fixed"} sx={{
-			zIndex: (theme) => theme.zIndex.drawer + 1,
-		}} style={{"--wails-draggable": "drag"} as React.CSSProperties} className={"no-select"}>
+		<AppBar
+			position={"fixed"}
+			sx={{
+				zIndex: (theme) => theme.zIndex.drawer + 1,
+			}}
+			style={{ "--wails-draggable": "drag" } as React.CSSProperties}
+			className={"no-select"}
+		>
 			<Toolbar variant={"dense"}>
-				<CableIcon sx={{
-					marginRight: 1,
-				}} />
+				<CableIcon
+					sx={{
+						marginRight: 1,
+					}}
+				/>
 				<span
 					style={{
 						flex: 1,
 						textAlign: "start",
 						fontSize: "1.1rem",
 						fontFamily: "Jetbrains Mono",
-				}}
+					}}
 				>
 					NetWeaver
 				</span>
@@ -28,7 +35,12 @@ function Header() {
 					size="small"
 					edge="end"
 					color="inherit"
-					style={{ marginRight: "0.5rem", "--wails-draggable": "no-drag"} as React.CSSProperties }
+					style={
+						{
+							marginRight: "0.5rem",
+							"--wails-draggable": "no-drag",
+						} as React.CSSProperties
+					}
 					onClick={() => WindowMinimise()}
 				>
 					<RemoveIcon />
@@ -37,7 +49,11 @@ function Header() {
 					size="small"
 					edge="end"
 					color="inherit"
-					style={{"--wails-draggable": "no-drag"} as React.CSSProperties}
+					style={
+						{
+							"--wails-draggable": "no-drag",
+						} as React.CSSProperties
+					}
 					onClick={() => Quit()}
 				>
 					<CloseIcon />

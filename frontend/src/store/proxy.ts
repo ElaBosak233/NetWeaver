@@ -27,5 +27,5 @@ export const useProxyStore = create<ProxyState>((set) => ({
 			delete state.active[id];
 			return { active: state.active, inactive: state.inactive };
 		});
-	}
+	},
 }));

@@ -1,17 +1,17 @@
 html {
-    background-color: rgba(27, 38, 54, 0);
-    color: white;
-    font-family: "JetBrains Mono", sans-serif;
+	background-color: rgba(27, 38, 54, 0);
+	color: white;
+	font-family: "JetBrains Mono", sans-serif;
 }
 
 body {
-    margin: 0;
-    color: white;
+	margin: 0;
+	color: white;
 }
 
 .no-select {
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE/Edge */
-    user-select: none;
+	-webkit-user-select: none; /* Safari */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE/Edge */
+	user-select: none;
 }
