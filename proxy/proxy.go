@@ -1,10 +1,13 @@
 package proxy
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"io"
 	"log"
 	"net"
@@ -20,14 +23,16 @@ type Proxy struct {
 	tcpListener net.Listener
 	connMap     map[net.Conn]bool
 	mutex       sync.Mutex
+	ctx         context.Context
 }
 
-func NewProxy(url string, host string) *Proxy {
+func NewProxy(ctx context.Context, url string, host string) *Proxy {
 	return &Proxy{
 		ID:      uuid.NewString(),
 		url:     url,
 		host:    host,
 		connMap: make(map[net.Conn]bool),
+		ctx:     ctx,
 	}
 }
 
@@ -99,6 +104,15 @@ func (p *Proxy) handleTCPClient(tcpConn net.Conn) {
 	wsConn, _, err := wsDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Printf("Dial error: %v", err)
+		response := map[string]interface{}{
+			"id": p.ID,
+		}
+		data, _ := json.Marshal(response)
+		fmt.Println(string(data))
+		runtime.EventsEmit(p.ctx, "dial_err", string(data))
+		go func() {
+			_ = p.Stop()
+		}()
 		return
 	}
 	defer func(wsConn *websocket.Conn) {

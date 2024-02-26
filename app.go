@@ -24,7 +24,7 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func (a *App) StartProxy(url string, host string) map[string]string {
-	p := proxy.NewProxy(url, host)
+	p := proxy.NewProxy(a.ctx, url, host)
 	addr, _ := p.Start()
 	a.mu.Lock()
 	defer a.mu.Unlock()

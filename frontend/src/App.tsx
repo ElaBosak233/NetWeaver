@@ -15,10 +15,13 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import Index from "@/pages";
 import About from "@/pages/About";
 import History from "@/pages/History";
+import { EventsOn } from "#/wailsjs/runtime";
+import { useProxyStore } from "@/store/proxy";
 
 function App() {
 	const snackBarStore = useSnackbarStore();
 	const themeStore = useThemeStore();
+	const proxyStore = useProxyStore();
 
 	const theme = useMemo(
 		() =>
@@ -30,6 +33,12 @@ function App() {
 			}),
 		[themeStore.mode]
 	);
+
+	EventsOn("dial_err", (response: string) => {
+		const obj = JSON.parse(response);
+		proxyStore.remove(obj?.id);
+	});
+
 	return (
 		<div id="App" className={"no-select"}>
 			<ThemeProvider theme={theme}>
